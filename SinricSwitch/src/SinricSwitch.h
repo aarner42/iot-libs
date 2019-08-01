@@ -17,13 +17,14 @@ typedef void (* vCallBack)();
 class SinricSwitch {
 private:
         ESP8266WebServer *server = NULL;
-        const char* deviceID;
+        String deviceID;
         bool powerState;
         bool connectedToSinric;
         vCallBack onCallback;
         vCallBack offCallback;
         vCallBack alertCallback;
         vCallBack resetCallback;
+        vCallBack rebootCallback;
         WebSocketsClient webSocket;
         uint64_t heartbeatTimestamp;
         uint64_t pingTimeStamp;
@@ -38,7 +39,7 @@ private:
         void setPowerStateOnServer(String value);
 public:
         SinricSwitch();
-        SinricSwitch(const char* api_key, const char* device_id, unsigned int port, vCallBack on, vCallBack off, vCallBack alert, vCallBack reset);
+        SinricSwitch(const char* api_key,  const String deviceID, unsigned int port, vCallBack on, vCallBack off, vCallBack alert, vCallBack reboot, vCallBack reset);
         ~SinricSwitch();
         void loop();
         void setPowerState(bool);

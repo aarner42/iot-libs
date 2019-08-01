@@ -4,23 +4,25 @@
 //<<constructor>>
 SinricSwitch::SinricSwitch() {
     Serial.println("default constructor called");
-}
+    }
 
 //useful constructor
-SinricSwitch::SinricSwitch(const char *apiKey, const char *device_id, unsigned int port, vCallBack onCB,
-                           vCallBack offCB, vCallBack alertCB, vCallBack resetCB) {
+SinricSwitch::SinricSwitch(const char *apiKey, const String device_id, unsigned int port, vCallBack onCB,
+                           vCallBack offCB, vCallBack alertCB, vCallBack rebootCB, vCallBack resetCB) {
     deviceID = device_id;
     onCallback = onCB;
     offCallback = offCB;
     alertCallback = alertCB;
+    rebootCallback = rebootCB;
     resetCallback = resetCB;
     powerState = false;
     startWebServer(port);
     startSinricClient(apiKey);
     heartbeatTimestamp = 0;
     pingTimeStamp = 0;
-    Serial.print("Registered switch with deviceID=");
-    Serial.println(deviceID);
+    Serial.print("Registered switch with deviceID=[");
+    Serial.print(deviceID);
+    Serial.println("]");
 }
 
 //<<destructor>>
@@ -77,9 +79,13 @@ void SinricSwitch::startWebServer(unsigned int localPort) {
     server->on("/off", [&]() {
         offCallback();
     });
+    server->on("/reboot", [&]() {
+        rebootCallback();
+    });
     server->on("/reset", [&]() {
         handleReset();
     });
+
 
     server->begin();
 
@@ -179,7 +185,7 @@ void SinricSwitch::webSocketEvent(WStype_t type, uint8_t *payload, size_t length
 }
 
 void SinricSwitch::sinricOn(String id) {
-    if (id == deviceID) // Device ID of first device
+    if (id.compareTo(deviceID))
     {
         Serial.print("Turn on device id: ");
         Serial.print(id);
@@ -187,13 +193,16 @@ void SinricSwitch::sinricOn(String id) {
         powerState = true;
         onCallback();
     } else {
-        Serial.print("Turn on for unknown device id: ");
-        Serial.println(id);
+        Serial.print("Turn on for unknown device id: [");
+        Serial.print(id);
+        Serial.print("] != [");
+        Serial.print(deviceID);
+        Serial.println("]");
     }
 }
 
 void SinricSwitch::sinricOff(String id) {
-    if (id == deviceID) // Device ID of first device
+    if (id.compareTo(deviceID))
     {
         Serial.print("Turn off Device ID: ");
         Serial.print(id);
@@ -202,7 +211,10 @@ void SinricSwitch::sinricOff(String id) {
         offCallback();
     } else {
         Serial.print("Turn off for unknown device id: ");
-        Serial.println(id);
+        Serial.print(id);
+        Serial.print("] != [");
+        Serial.print(deviceID);
+        Serial.println("]");
     }
 }
 
@@ -232,7 +244,7 @@ void SinricSwitch::setPowerState(bool newState) {
 }
 
 // Call ONLY If status changed manually. DO NOT CALL THIS IN loop() and overload the server. 
-void SinricSwitch::setPowerStateOnServer(String value) {
+void SinricSwitch::setPowerStateOnServer(const String value) {
     Serial.print("Updating status on server.  Setting deviceID:");
     Serial.print(deviceID);
     Serial.print(" new state:");
