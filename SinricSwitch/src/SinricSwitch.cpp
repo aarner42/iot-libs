@@ -7,7 +7,7 @@ SinricSwitch::SinricSwitch() {
     }
 
 //useful constructor
-SinricSwitch::SinricSwitch(const char *apiKey, const String device_id, unsigned int port, vCallBack onCB,
+SinricSwitch::SinricSwitch(String apiKey, String device_id, unsigned int port, vCallBack onCB,
                            vCallBack offCB, vCallBack alertCB, vCallBack rebootCB, vCallBack resetCB) {
     deviceID = device_id;
     onCallback = onCB;
@@ -82,7 +82,7 @@ void SinricSwitch::startWebServer(unsigned int localPort) {
     server->on("/reboot", [&]() {
         rebootCallback();
     });
-    server->on("/reset", [&]() {
+    server->on("/resetAll", [&]() {
         handleReset();
     });
 
@@ -93,14 +93,14 @@ void SinricSwitch::startWebServer(unsigned int localPort) {
     Serial.println(localPort);
 }
 
-void SinricSwitch::startSinricClient(const char *apiKey) {
+void SinricSwitch::startSinricClient(String apiKey) {
     webSocket.begin("iot.sinric.com", 80, "/");
 
     // event handler uses anonymous function to pass in instance method instead of free-member/static
     webSocket.onEvent([&](WStype_t t, uint8_t *p, size_t l) {
         webSocketEvent(t, p, l);
     });
-    webSocket.setAuthorization("apikey", apiKey);
+    webSocket.setAuthorization("apikey", apiKey.c_str());
     Serial.println("WebSocket handlers/authorization registered...");
 
     // try again every 60 s if connection has failed
@@ -185,46 +185,54 @@ void SinricSwitch::webSocketEvent(WStype_t type, uint8_t *payload, size_t length
 }
 
 void SinricSwitch::sinricOn(String id) {
-    if (id.compareTo(deviceID))
+    if (deviceID.startsWith(id))
     {
-        Serial.print("Turn on device id: ");
+        Serial.print("Turn on  device id: [");
         Serial.print(id);
-        Serial.print("...");
+        Serial.print("] == [");
+        Serial.print(deviceID);
+        Serial.print("] cmp: ");
+        Serial.println(deviceID.startsWith(id));
         powerState = true;
         onCallback();
     } else {
-        Serial.print("Turn on for unknown device id: [");
+        Serial.print("Turn on  for unknown device id: [");
         Serial.print(id);
         Serial.print("] != [");
         Serial.print(deviceID);
-        Serial.println("]");
+        Serial.print("] cmp: ");
+        Serial.println(deviceID.startsWith(id));
+
     }
 }
 
 void SinricSwitch::sinricOff(String id) {
-    if (id.compareTo(deviceID))
+    if (deviceID.startsWith(id))
     {
-        Serial.print("Turn off Device ID: ");
+        Serial.print("Turn off device id: [");
         Serial.print(id);
-        Serial.print("...");
+        Serial.print("] == [");
+        Serial.print(deviceID);
+        Serial.print("] cmp: ");
+        Serial.println(deviceID.startsWith(id));
         powerState = false;
         offCallback();
     } else {
-        Serial.print("Turn off for unknown device id: ");
+        Serial.print("Turn off for unknown device id: [");
         Serial.print(id);
         Serial.print("] != [");
         Serial.print(deviceID);
-        Serial.println("]");
+        Serial.print("] cmp: ");
+        Serial.println(deviceID.startsWith(id));
     }
 }
 
 void SinricSwitch::handleRoot() {
     uint64_t now = millis();
-    char buff[21];
-    sprintf(buff, "%" PRIu64, now / 1000);
+    char buff[24];
+    sprintf(buff, "%" PRIu64, now / 1000 / 3600);
     server->send(200, "text/plain",
-                 "Uptime: " + String(buff) + " seconds.  Call /reset if you want to reset me (deviceID=" + deviceID +
-                 ")...");
+                 "Uptime: " + String(buff) + " hours.  Call /reboot or /resetAll if you want to restart/reset me (deviceID=" + deviceID + ")...");
 }
 
 void SinricSwitch::handleReset() {
@@ -237,24 +245,24 @@ void SinricSwitch::setPowerState(bool newState) {
     if (powerState != newState) {
         Serial.print("Changing switch state...relayClosed:");
         Serial.println(newState);
-        String newValue = newState ? "ON" : "OFF";
-        setPowerStateOnServer(newValue);
+        setPowerStateOnServer(newState ? ON_STATE : OFF_STATE);
     }
     powerState = newState;
 }
 
 // Call ONLY If status changed manually. DO NOT CALL THIS IN loop() and overload the server. 
-void SinricSwitch::setPowerStateOnServer(const String value) {
-    Serial.print("Updating status on server.  Setting deviceID:");
-    Serial.print(deviceID);
-    Serial.print(" new state:");
-    Serial.println(value);
+void SinricSwitch::setPowerStateOnServer(const char *value) {
+    Serial.print("Updating status on server...");
     DynamicJsonBuffer jsonBuffer;
-    JsonObject &root = jsonBuffer.createObject();
-    root["deviceId"] = deviceID;
+    JsonObject& root = jsonBuffer.createObject();
+
+    String sendString = String(deviceID.c_str());  //god c sucks balls when it comes to strings.  stupid carriage returns
+    sendString.replace("\r", "");
+    root["deviceId"] = sendString;
     root["action"] = "setPowerState";
     root["value"] = value;
     StreamString databuf;
     root.printTo(databuf);
+    Serial.println(databuf);
     webSocket.sendTXT(databuf);
 }

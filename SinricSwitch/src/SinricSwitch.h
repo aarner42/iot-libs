@@ -11,6 +11,8 @@
 #include <ESP8266WebServer.h>
 #include <StreamString.h>
 
+#define ON_STATE  "ON"
+#define OFF_STATE "OFF"
 
 typedef void (* vCallBack)();
  
@@ -29,17 +31,17 @@ private:
         uint64_t heartbeatTimestamp;
         uint64_t pingTimeStamp;
         void startWebServer(unsigned int localPort);
-        void startSinricClient(const char* apiKey);
+        void startSinricClient(String apiKey);
         void handleRoot();
         void handleReset();
         void sinricOn(String id);
         void sinricOff(String id);
         void sinricLoop();
         void webLoop();
-        void setPowerStateOnServer(String value);
+        void setPowerStateOnServer(const char *value);
 public:
         SinricSwitch();
-        SinricSwitch(const char* api_key,  const String deviceID, unsigned int port, vCallBack on, vCallBack off, vCallBack alert, vCallBack reboot, vCallBack reset);
+        SinricSwitch(String api_key,  String deviceID, unsigned int port, vCallBack on, vCallBack off, vCallBack alert, vCallBack reboot, vCallBack reset);
         ~SinricSwitch();
         void loop();
         void setPowerState(bool);
