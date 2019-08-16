@@ -8,7 +8,7 @@ SinricSwitch3Way::SinricSwitch3Way(){
 }
 
 //useful constructor
-SinricSwitch3Way::SinricSwitch3Way(const char* apiKey, const char* device_id, unsigned int port, vCallBack toggleCB, vCallBack alertCB, vCallBack resetCB){
+SinricSwitch3Way::SinricSwitch3Way(String apiKey, String device_id, unsigned int port, vCallBack toggleCB, vCallBack alertCB, vCallBack rebootCB, vCallBack resetCB){
     deviceID = device_id;
     toggleCallback = toggleCB;
     alertCallback = alertCB;
@@ -85,7 +85,7 @@ void SinricSwitch3Way::startWebServer(unsigned int localPort){
   Serial.println(localPort);
 }
 
-void SinricSwitch3Way::startSinricClient(const char* apiKey) {
+void SinricSwitch3Way::startSinricClient(String apiKey) {
   webSocket.begin("iot.sinric.com", 80, "/");
  
   // event handler
@@ -93,7 +93,7 @@ void SinricSwitch3Way::startSinricClient(const char* apiKey) {
   webSocket.onEvent([&](WStype_t t, uint8_t * p, size_t l) {
     webSocketEvent(t, p, l);
   });
-  webSocket.setAuthorization("apikey", apiKey);
+  webSocket.setAuthorization("apikey", apiKey.c_str());
   Serial.println("WebSocket handlers/authorization registered...");
   
   // try again every 60 s if connection has failed
@@ -229,13 +229,13 @@ void SinricSwitch3Way::setPowerState(bool newState) {
     Serial.print("Changing switch state...currentFlowing:");
     Serial.println(newState);
     String newValue = newState ? "ON" : "OFF";
-    setPowerStateOnServer(newValue);
+    setPowerStateOnServer(newValue.c_str());
   }
   powerState = newState;
 }
 
 // Call ONLY If status changed manually. DO NOT CALL THIS IN loop() and overload the server. 
-void SinricSwitch3Way::setPowerStateOnServer(String value) {
+void SinricSwitch3Way::setPowerStateOnServer(const char* value) {
   Serial.print("Updating status on server.  Setting deviceID:");
   Serial.print(deviceID);
   Serial.print(" new state:");
