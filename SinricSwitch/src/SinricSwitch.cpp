@@ -19,7 +19,7 @@ SinricSwitch::SinricSwitch(String apiKey, String device_id, unsigned int port, v
     startWebServer(port);
     startSinricClient(apiKey);
     heartbeatTimestamp = 0;
-    pingTimeStamp = 0;
+    pingTimeStamp = 0;uptime
     Serial.print("Registered switch with deviceID=[");
     Serial.print(deviceID);
     Serial.println("]");
