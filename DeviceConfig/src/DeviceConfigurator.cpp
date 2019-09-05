@@ -78,8 +78,8 @@ IOTConfig DeviceConfigurator::getConfig() {
         config.ledPin = getPinFromString(ledPin);
         config.inputPin = getPinFromString(inputPin);
         config.triggerPin = getPinFromString(triggerPin);
-        config.onLevel = getLevelFromString(triggerLevel, false);
-        config.offLevel = getLevelFromString(triggerLevel, true);
+        config.onLevel = getLevelFromString(triggerLevel);
+        config.offLevel = !getLevelFromString(triggerLevel);
 
         SPIFFS.end();
         return config;
@@ -90,32 +90,35 @@ IOTConfig DeviceConfigurator::getConfig() {
 }
 
     uint8_t DeviceConfigurator::getPinFromString(const String &pinRep) {
-        if (pinRep.equals("D0"))
+        Serial.printf("Converting string representation (%s) into pin value\n", pinRep.c_str());
+        if (pinRep.startsWith("D0"))
             return D0;
-        if (pinRep.equals("D1"))
+        if (pinRep.startsWith("D1"))
             return D1;
-        if (pinRep.equals("D2"))
+        if (pinRep.startsWith("D2"))
             return D2;
-        if (pinRep.equals("D3"))
+        if (pinRep.startsWith("D3"))
             return D3;
-        if (pinRep.equals("D4"))
+        if (pinRep.startsWith("D4"))
             return D4;
-        if (pinRep.equals("D5"))
+        if (pinRep.startsWith("D5"))
             return D5;
-        if (pinRep.equals("D6"))
+        if (pinRep.startsWith("D6"))
             return D6;
-        if (pinRep.equals("D7"))
+        if (pinRep.startsWith("D7"))
             return D7;
-        if (pinRep.equals("D8"))
+        if (pinRep.startsWith("D8"))
             return D8;
 
+        Serial.println("No Match - returning LED_BUILTIN");
         return LED_BUILTIN;
     }
 
-    uint8_t DeviceConfigurator::getLevelFromString(const String &lvlRep, bool invert) {
-        if (lvlRep.equalsIgnoreCase("LOW"))
-            return invert? HIGH : LOW;
-        return invert? LOW : HIGH;
+    boolean DeviceConfigurator::getLevelFromString(const String &lvlRep) {
+        if (lvlRep.startsWith("HIGH"))
+            return HIGH;
+        else
+            return LOW;
     }
 
 

@@ -229,10 +229,11 @@ void SinricSwitch::sinricOff(String id) {
 
 void SinricSwitch::handleRoot() {
     uint64_t now = millis();
-    char buff[24];
-    sprintf(buff, "%" PRIu64, now / 1000 / 3600);
-    server->send(200, "text/plain",
-                 "Uptime: " + String(buff) + " hours.  Call /reboot or /resetAll if you want to restart/reset me (deviceID=" + deviceID + ")...");
+//    char buff[24];
+//    sprintf(buff, "%" PRIu64, now / 1000 / 3600);
+    char newString[128];
+    sprintf(newString, "deviceID=%s : Uptime is %llu hours - Call  /reboot or /resetAll to reboot or factory-reset...\n", deviceID.c_str(), (now/1000/3600));
+    server->send(200, "text/plain", newString);
 }
 
 void SinricSwitch::handleReset() {

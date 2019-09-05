@@ -25,7 +25,7 @@ struct IOTConfig {
 class DeviceConfigurator {
 private:
     static uint8_t getPinFromString(const String& rep);
-    static uint8_t getLevelFromString(const String& rep, bool invert);
+    static boolean getLevelFromString(const String& rep);
     const char* configFileName;
     void initWebPortalForConfigCapture();
     void validateConfig(const char *name, const String& value, uint8 min, uint8 max);
