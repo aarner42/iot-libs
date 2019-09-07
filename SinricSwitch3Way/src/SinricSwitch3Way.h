@@ -11,6 +11,10 @@
 #include <ESP8266WebServer.h>
 #include <StreamString.h>
 
+#define ON_STATE  "ON"
+#define OFF_STATE "OFF"
+
+
 typedef void (* vCallBack)();
 
  

@@ -182,6 +182,12 @@ void SinricSwitch3Way::webSocketEvent(WStype_t type, uint8_t *payload, size_t le
             connectedToSinric = true;
             Serial.printf("[WSc] get binary length: %u\n", length);
             break;
+        case WStype_PING:
+            connectedToSinric = true;
+            break;
+        case WStype_PONG:
+            connectedToSinric = true;
+            break;
     }
 }
 
